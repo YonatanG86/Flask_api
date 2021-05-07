@@ -6,13 +6,24 @@ from datetime import datetime
 
 class Message:
     def write(self):
+
+        receiver = request.form.get('receiver', None)
+        message = request.form.get('message', None)
+        subject = request.form.get('subject')
+
+        if not receiver:
+            return jsonify({"error": "A message must contain a receiver"}), 400
+               
+        if not subject:
+            return jsonify({"error": "A message must contain a subject"}), 400
+
         message = {
             "_id": uuid.uuid4().hex,
             "sender": session['logged_in']['email'],
-            "receiver": request.form.get('receiver'),
-            "message": request.form.get('message'),
-            "subject": request.form.get('subject'),
-            "creation_date": datetime.now(),
+            "receiver": receiver,
+            "message": message,
+            "subject": subject,
+            "creation_date": datetime.now,
             'read': "No"
         }
         if mongo.db.users.find_one({'email': message['receiver']}):
@@ -31,10 +42,12 @@ class Message:
         return jsonify({"messages": response}), 200
 
     def all_unread_messages(self):
-        messages =mongo.db.messages.find({'receiver': session['logged_in']['email'], 'read': "No"})
+        messages = mongo.db.messages.find({'receiver': session['logged_in']['email'], 'read': "No"})
         response =[]
+
         for message in messages:
             response.append(message)
+
         if len(response) == 0:
             return jsonify({"error": "No messages found"}), 400
 
@@ -42,6 +55,7 @@ class Message:
 
     def read_message(self):
         response = mongo.db.messages.find_one({'receiver': session['logged_in']['email'],'_id': request.args.get("id")})
+        
         if response is None:
             return jsonify({"error": "The message does not exist"}), 400
         else: 
@@ -55,3 +69,20 @@ class Message:
         else: 
             mongo.db.messages.delete_one({'receiver': session['logged_in']['email'],'_id': request.args.get("id")})
             return jsonify("the message was deleted"), 200
+    
+    def conversation(self,id):
+        response = mongo.db.users.find_one({'_id': str(id)})
+    
+        if response is None:
+            return jsonify({"error": "The requested user does not exist"}), 400
+
+        messages = mongo.db.messages.find( { '$or': [{'receiver': session['logged_in']['email'],'sender' : response['email']},{'sender': session['logged_in']['email'],'receiver' : response['email']}]} )
+        response =[]
+
+        for message in messages:
+            response.append(message)
+
+        if len(response) == 0:
+            return jsonify({"error": "You do not have a conversation with the requested user"}), 400
+        
+        return jsonify({"messages": response}), 200

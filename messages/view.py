@@ -30,3 +30,8 @@ def messageread():
 @login_required
 def delete():
     return Message().delete_message()
+
+@messages.route('/message/<id>/')
+@login_required
+def conversation(id):
+    return Message().conversation(id)

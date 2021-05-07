@@ -4,15 +4,23 @@ import uuid
 from flask.globals import session
 from main.db import mongo
 from passlib.hash import pbkdf2_sha256
-
+import jwt
 
 class User:
     def signup(self):
+        name = request.form.get('name')
+        email = request.form.get('email', None)
+        password = request.form.get('password', None)
+        
+        if not email:
+            return jsonify({"error": "Email is missing"}), 400
+        if not password:
+            return jsonify({"error": "Password is missing"}), 400
         user = {
             "_id": uuid.uuid4().hex,
-            "name": request.form.get('name'),
-            "email": request.form.get('email'),
-            "password": request.form.get('password')
+            "name": name,
+            "email": email,
+            "password": password
         }
 
         # Encrypt the password
@@ -42,6 +50,7 @@ class User:
         })
 
         if user and pbkdf2_sha256.verify(request.form.get('password'), user['password']):
+            # token = jwt.encode(user)
             return self.start_session(user)
         return jsonify({"error": "Invalid login credentials"}), 401 #401 unauthorise 
 
