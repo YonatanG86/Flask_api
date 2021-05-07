@@ -10,7 +10,6 @@ class Message:
         receiver = request.form.get('receiver', None)
         message = request.form.get('message', None)
         subject = request.form.get('subject')
-
         if not receiver:
             return jsonify({"error": "A message must contain a receiver"}), 400
                
