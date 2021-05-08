@@ -20,4 +20,4 @@ def logout():
 
 @auth.route('/user_admin/')
 def u_admin():
-    return User().all_user_admin()
+    return User().all_users_admin()
