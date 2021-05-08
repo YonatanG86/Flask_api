@@ -97,6 +97,7 @@ class Message:
 #  If user is the sender and the receiver have not read the message - delelet the message for both sender and receiver
 #  If user is the  receiver - delete the message for the receiver
 #  Messages are not being deleted (with delete_one query) from data base but they will not show up in searches.
+#  If the message was already deleted return an error
     def delete_message(self,id):
         message = mongo.db.messages.find_one({'_id': str(id)})
 
@@ -104,6 +105,10 @@ class Message:
             return jsonify({"error": "The message does not exist"}), 400
 
         if message['sender_id'] == session['logged_in']['_id']:
+
+            if message['sender_delete'] == True:
+                return jsonify({"error": "The message was already deleted"}), 400
+                
             mongo.db.messages.find_one_and_update({ '_id': str(id),
                                                     'sender_id':session['logged_in']['_id']},
                                                     { '$set':{'sender_delete': True}})
@@ -118,6 +123,10 @@ class Message:
             return jsonify({"message": "The message was deleted for the sender only"}), 200
         
         if message['receiver_id'] == session['logged_in']['_id']:
+
+            if message['receiver_delete'] == True:
+                return jsonify({"error": "The message was already deleted"}), 400
+
             mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
                                                     'receiver_id':session['logged_in']['_id']},
                                                     { '$set':{'receiver_delete': True}})
@@ -130,6 +139,7 @@ class Message:
         if mongo.db.users.find_one({'_id': str(id)}) is None:
             return jsonify({"error": "The requested user does not exist"}), 400
 
+#Converstion between 2 users
 # find all the messages that were not deleted by the user
 # with either the session's user as the receiver and the requested user in the sender 
 # OR the session's user as the sender and the requested user in the receiver
