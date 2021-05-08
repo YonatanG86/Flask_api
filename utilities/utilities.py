@@ -1,4 +1,5 @@
-from flask import session , jsonify
+from flask import jsonify
+from flask.globals import session
 from functools import wraps
 
 def login_required(f):

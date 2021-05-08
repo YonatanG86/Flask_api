@@ -1,6 +1,4 @@
 from flask import Blueprint
-from functools import wraps
-from model.user_model import User
 from model.message_model import Message
 from utilities.utilities import login_required
 
