@@ -84,7 +84,7 @@ class Message:
             mongo.db.messages.find_one_and_update({ 'receiver_id': session['logged_in']['_id'],
                                                     '_id': str(id)},
                                                     { '$set':{'read': True}})
-
+            
 # after the read update, the message need to be to be retrive again                                                    
             message = mongo.db.messages.find_one({  'receiver_id': session['logged_in']['_id'],
                                                 '_id': str(id)})
@@ -127,9 +127,10 @@ class Message:
             if message['receiver_delete'] == True:
                 return jsonify({"error": "The message was already deleted"}), 400
 
-            mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+            mongo.db.messages.find_one_and_update({ '_id': str(id),
                                                     'receiver_id':session['logged_in']['_id']},
                                                     { '$set':{'receiver_delete': True}})
+            
             return jsonify({"message": "The message was deleted for the receiver"}), 200
         
         return jsonify({"error": "User not authorized to delete the message"}), 401
