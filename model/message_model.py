@@ -11,10 +11,11 @@ class Message:
         message = request.form.get('message', None)
         subject = request.form.get('subject')
 
+
 # Message data validation
         if not receiver:
             return jsonify({"error": "A message must contain a receiver"}), 400
-               
+            
         if not subject:
             return jsonify({"error": "A message must contain a subject"}), 400
 
@@ -24,8 +25,7 @@ class Message:
 
 
 # Added Sender_id and receiver_user because users sometimes change their email
-# there-for any type of reference to the users should be done with the with unchangeable filed like primary key 
-        
+# Any type of reference to the users should be done with unchangeable filed like primary key         
         message = {
             "_id": uuid.uuid4().hex,
             "sender": session['logged_in']['email'],
@@ -37,7 +37,9 @@ class Message:
             "message": message,
             "subject": subject,
             "creation_date": datetime.now(),
-            'read': "No"
+            "read": False,
+            "sender_delete": False,
+            "receiver_delete": False,
         }
 
         mongo.db.messages.insert_one(message)
@@ -45,7 +47,8 @@ class Message:
 
 
     def all_messages(self):
-        messages =mongo.db.messages.find({'receiver': session['logged_in']['_id']})
+        messages =mongo.db.messages.find({  'receiver': session['logged_in']['_id'],
+                                            'receiver_delete':False})
         response =[]
         for message in messages:
             response.append(message)
@@ -54,8 +57,12 @@ class Message:
 
         return jsonify({"messages": response}), 200
 
+
+# A massage can be deleted without the receiver reading the massage
     def all_unread_messages(self):
-        messages = mongo.db.messages.find({'receiver': session['logged_in']['_id'], 'read': "No"})
+        messages = mongo.db.messages.find({ 'receiver': session['logged_in']['_id'], 
+                                            'receiver_delete':False,
+                                            'read': False})
         response =[]
 
         for message in messages:
@@ -68,32 +75,63 @@ class Message:
 
 
     def read_message(self):
-        response = mongo.db.messages.find_one({'receiver': session['logged_in']['_id'],'_id': request.args.get("id")})
+        message = mongo.db.messages.find_one({  'receiver': session['logged_in']['_id'],
+                                                '_id': request.args.get("id")})
         
-        if response is None:
+        if message is None:
             return jsonify({"error": "The message does not exist"}), 400
         else: 
-            mongo.db.messages.find_one_and_update({'receiver_id': session['logged_in']['_id'],'_id': request.args.get("id")},{ '$set':{'read': "Yes"}})
+            mongo.db.messages.find_one_and_update({ 'receiver_id': session['logged_in']['_id'],
+                                                    '_id': request.args.get("id")},
+                                                    { '$set':{'sender_delete': True}})
             return jsonify({"message": "The message was read"}), 200
 
 
+# Delete message 
+#  If user is the sender - delelet the message for sender
+#  If user is the sender and the receiver have not read the message - delelet the message for both sender and receiver
+#  If user is the  receiver - delete the message for the receiver
+#  Messages are not being deleted (with delete_one query) from data base but they will not show up in searches.
     def delete_message(self):
-        response = mongo.db.messages.find_one({'receiver_id': session['logged_in']['_id'],'_id': request.args.get("id")})
-        if response is None:
+        message = mongo.db.messages.find_one({'_id': request.args.get("id")})
+
+        if message is None:
             return jsonify({"error": "The message does not exist"}), 400
-        else: 
-            mongo.db.messages.delete_one({'receiver': session['logged_in']['_id'],'_id': request.args.get("id")})
-            return jsonify("the message was deleted"), 200
+
+        if message['sender_id'] == session['logged_in']['_id']:
+            mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+                                                    'sender_id':session['logged_in']['_id']},
+                                                    { '$set':{'sender_delete': True}})
+
+            if message['read'] == False:
+                mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+                                                        'sender_id':session['logged_in']['_id'],
+                                                        'read':False},
+                                                        { '$set':{'receiver_delete': True}})
+                return jsonify({"message": "The message was deleted for both sender and receiver"}), 200
+            
+            return jsonify({"message": "The message was deleted for the sender only"}), 200
+        
+        if message['receiver_id'] == session['logged_in']['_id']:
+            mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+                                                    'receiver_id':session['logged_in']['_id']},
+                                                    { '$set':{'receiver_delete': True}})
+            return jsonify({"message": "The message was deleted for the receiver"}), 200
+        
+        return jsonify({"error": "User not authorized to delete the message"}), 401
     
 
     def conversation(self,id):
-        # response = mongo.db.users.find_one({'_id': str(id)})
         if mongo.db.users.find_one({'_id': str(id)}) is None:
             return jsonify({"error": "The requested user does not exist"}), 400
 
-# find all the messages with the session's user as the receiver and the requested user in the sender 
+# find all the messages that were not deleted by the user
+# with either the session's user as the receiver and the requested user in the sender 
 # OR the session's user as the sender and the requested user in the receiver
-        messages = mongo.db.messages.find( { '$or': [{'receiver_id': session['logged_in']['_id'],'sender_id' : str(id)},{'sender_id': session['logged_in']['_id'],'receiver_id' : str(id)}]} ).sort('creation_date', -1)
+        messages = mongo.db.messages.find( { '$or': [
+                                            {'receiver_id': session['logged_in']['_id'],'receiver_delete':False,'sender_id' : str(id)},
+                                            {'sender_id': session['logged_in']['_id'],'sender_delete':False,'receiver_id' : str(id)}
+                                            ]}).sort('creation_date', -1)
         response =[]
 
         for message in messages:
