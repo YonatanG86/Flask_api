@@ -83,7 +83,12 @@ class Message:
         else: 
             mongo.db.messages.find_one_and_update({ 'receiver_id': session['logged_in']['_id'],
                                                     '_id': str(id)},
-                                                    { '$set':{'sender_delete': True}})
+                                                    { '$set':{'read': True}})
+
+# after the read update, the message need to be to be retrive again                                                    
+            message = mongo.db.messages.find_one({  'receiver_id': session['logged_in']['_id'],
+                                                '_id': str(id)})
+
             return jsonify(message), 200
 
 
