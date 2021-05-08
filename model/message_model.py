@@ -74,15 +74,15 @@ class Message:
         return jsonify({"messages": response}), 200
 
 
-    def read_message(self):
+    def read_message(self,id):
         message = mongo.db.messages.find_one({  'receiver_id': session['logged_in']['_id'],
-                                                '_id': request.args.get("id")})
+                                                '_id': str(id)})
         
         if message is None:
             return jsonify({"error": "The message does not exist"}), 400
         else: 
             mongo.db.messages.find_one_and_update({ 'receiver_id': session['logged_in']['_id'],
-                                                    '_id': request.args.get("id")},
+                                                    '_id': str(id)},
                                                     { '$set':{'sender_delete': True}})
             return jsonify({"message": "The message was read"}), 200
 
@@ -92,19 +92,19 @@ class Message:
 #  If user is the sender and the receiver have not read the message - delelet the message for both sender and receiver
 #  If user is the  receiver - delete the message for the receiver
 #  Messages are not being deleted (with delete_one query) from data base but they will not show up in searches.
-    def delete_message(self):
-        message = mongo.db.messages.find_one({'_id': request.args.get("id")})
+    def delete_message(self,id):
+        message = mongo.db.messages.find_one({'_id': str(id)})
 
         if message is None:
             return jsonify({"error": "The message does not exist"}), 400
 
         if message['sender_id'] == session['logged_in']['_id']:
-            mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+            mongo.db.messages.find_one_and_update({ '_id': str(id),
                                                     'sender_id':session['logged_in']['_id']},
                                                     { '$set':{'sender_delete': True}})
 
             if message['read'] == False:
-                mongo.db.messages.find_one_and_update({ '_id': request.args.get("id"),
+                mongo.db.messages.find_one_and_update({ '_id': str(id),
                                                         'sender_id':session['logged_in']['_id'],
                                                         'read':False},
                                                         { '$set':{'receiver_delete': True}})

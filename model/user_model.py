@@ -47,7 +47,7 @@ class User:
 
     def logout(self):
         session.clear()
-        return jsonify("User loged-out"), 200
+        return jsonify("User logged-out"), 200
 
 
     def login(self):
@@ -55,7 +55,7 @@ class User:
             "email": request.form.get('email')})
         if user and pbkdf2_sha256.verify(request.form.get('password'), user['password']):
             return self.start_session(user)
-        return jsonify({"error": "Invalid login credentials"}), 401
+        return jsonify({"error": "Invalid loggin credentials"}), 401
 
     def all_users_admin(self):
         users =mongo.db.users.find()
