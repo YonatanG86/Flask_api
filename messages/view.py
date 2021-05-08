@@ -19,12 +19,12 @@ def all():
 def allunread():
     return Message().all_unread_messages()
 
-@messages.route('/message/read/',methods=['POST'])
+@messages.route('/message/read/<id>/',methods=['POST'])
 @login_required
 def messageread():
     return Message().read_message()
 
-@messages.route('/message/delete/', methods=['DELETE'])
+@messages.route('/message/delete/<id>/', methods=['DELETE'])
 @login_required
 def delete():
     return Message().delete_message()
