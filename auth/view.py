@@ -17,3 +17,8 @@ def login():
 @login_required
 def logout():
     return User().logout()
+
+@auth.route('/user_admin/')
+@login_required
+def m_admin():
+    return User().all_user_admin()

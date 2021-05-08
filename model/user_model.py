@@ -55,4 +55,14 @@ class User:
             "email": request.form.get('email')})
         if user and pbkdf2_sha256.verify(request.form.get('password'), user['password']):
             return self.start_session(user)
-        return jsonify({"error": "Invalid login credentials"}), 401 
+        return jsonify({"error": "Invalid login credentials"}), 401
+
+    def all_messages_admin(self):
+        users =mongo.db.users.find()
+        response =[]
+        for user in users:
+            response.append(user)
+        if len(response) == 0:
+            return jsonify("No users found"), 200
+
+        return jsonify({"users": response}), 200

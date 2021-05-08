@@ -141,3 +141,14 @@ class Message:
             return jsonify({"error": "You do not have a conversation with the requested user"}), 400
         
         return jsonify({"messages": response}), 200
+
+    
+    def all_messages_admin(self):
+        messages =mongo.db.messages.find()
+        response =[]
+        for message in messages:
+            response.append(message)
+        if len(response) == 0:
+            return jsonify("No messages found"), 200
+
+        return jsonify({"messages": response}), 200
