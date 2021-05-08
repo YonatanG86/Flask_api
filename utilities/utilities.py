@@ -6,6 +6,7 @@ def login_required(f):
     @wraps(f)
     def wrap(*arg,**kwargs):
         if 'logged_in' in session:
+            session.modified = True
             return f(*arg, **kwargs)
         else:
             return jsonify({"error": "No user is logged in"}), 400
