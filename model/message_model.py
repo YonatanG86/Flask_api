@@ -84,7 +84,7 @@ class Message:
             mongo.db.messages.find_one_and_update({ 'receiver_id': session['logged_in']['_id'],
                                                     '_id': str(id)},
                                                     { '$set':{'sender_delete': True}})
-            return jsonify({"message": "The message was read"}), 200
+            return jsonify(message), 200
 
 
 # Delete message 
