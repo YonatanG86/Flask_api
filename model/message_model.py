@@ -47,7 +47,7 @@ class Message:
 
 
     def all_messages(self):
-        messages =mongo.db.messages.find({  'receiver': session['logged_in']['_id'],
+        messages =mongo.db.messages.find({  'receiver_id': session['logged_in']['_id'],
                                             'receiver_delete':False})
         response =[]
         for message in messages:
@@ -60,7 +60,7 @@ class Message:
 
 # A massage can be deleted without the receiver reading the massage
     def all_unread_messages(self):
-        messages = mongo.db.messages.find({ 'receiver': session['logged_in']['_id'], 
+        messages = mongo.db.messages.find({ 'receiver_id': session['logged_in']['_id'], 
                                             'receiver_delete':False,
                                             'read': False})
         response =[]
@@ -75,7 +75,7 @@ class Message:
 
 
     def read_message(self):
-        message = mongo.db.messages.find_one({  'receiver': session['logged_in']['_id'],
+        message = mongo.db.messages.find_one({  'receiver_id': session['logged_in']['_id'],
                                                 '_id': request.args.get("id")})
         
         if message is None:
