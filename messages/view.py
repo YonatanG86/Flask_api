@@ -36,4 +36,4 @@ def conversation(id):
 
 @messages.route('/message_all/')
 def m_all():
-    return Message().all_messages()
+    return Message().all_messages_users()

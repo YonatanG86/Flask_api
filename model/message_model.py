@@ -158,7 +158,7 @@ class Message:
         return jsonify({"messages": response}), 200
 
     
-    def all_messages(self):
+    def all_messages_users(self):
         messages =mongo.db.messages.find({})
         response =[]
         for message in messages:
