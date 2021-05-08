@@ -35,6 +35,5 @@ def conversation(id):
     return Message().conversation(id)
 
 @messages.route('/message_admin/')
-@login_required
 def m_admin():
     return Message().all_messages_admin()
