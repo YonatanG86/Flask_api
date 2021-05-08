@@ -2,12 +2,9 @@ from messages.view import messages
 from auth.view import auth
 from flask import Flask
 from main.db import mongo
-from os import environ
-import urllib
 
 
 def create_app():
-
 
     app = Flask(__name__)
  
@@ -16,4 +13,5 @@ def create_app():
 
     app.register_blueprint(messages)
     app.register_blueprint(auth)
+    
     return app
