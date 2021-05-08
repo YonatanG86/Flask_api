@@ -21,19 +21,19 @@ def allunread():
 
 @messages.route('/message/read/<id>/',methods=['POST'])
 @login_required
-def messageread():
-    return Message().read_message()
+def messageread(id):
+    return Message().read_message(id)
 
 @messages.route('/message/delete/<id>/', methods=['DELETE'])
 @login_required
-def delete():
-    return Message().delete_message()
+def delete(id):
+    return Message().delete_message(id)
 
 @messages.route('/message/<id>/')
 @login_required
 def conversation(id):
     return Message().conversation(id)
 
-@messages.route('/message_admin/')
-def m_admin():
-    return Message().all_messages_admin()
+@messages.route('/message_all/')
+def m_all():
+    return Message().all_messages()

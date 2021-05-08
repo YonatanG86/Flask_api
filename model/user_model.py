@@ -57,7 +57,7 @@ class User:
             return self.start_session(user)
         return jsonify({"error": "Invalid loggin credentials"}), 401
 
-    def all_users_admin(self):
+    def all_users(self):
         users =mongo.db.users.find()
         response =[]
         for user in users:

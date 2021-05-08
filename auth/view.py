@@ -18,6 +18,6 @@ def login():
 def logout():
     return User().logout()
 
-@auth.route('/user_admin/')
-def u_admin():
-    return User().all_users_admin()
+@auth.route('/user_all/')
+def u_all():
+    return User().all_users()
